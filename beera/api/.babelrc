@@ -1,0 +1,10 @@
+{
+  "presets": [
+    ["@babel/preset-env"]
+  ],
+  "plugins": [
+    ["add-module-exports"],
+    ["inline-dotenv"],
+    ["@babel/plugin-transform-runtime"]
+  ]
+}

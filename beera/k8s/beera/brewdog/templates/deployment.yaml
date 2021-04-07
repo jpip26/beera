@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "brewdog.fullname" . }}
+  labels:
+    {{- include "brewdog.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "brewdog.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "brewdog.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      serviceAccountName: {{ include "brewdog.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:  
+            - name: DB_HOST 
+              value: {{ .Values.brewdog.DB_HOST }}
+            - name: DB_USER
+              value: {{ .Values.brewdog.DB_USER }}
+            - name: DB_NAME
+              value: "{{ .Values.brewdog.DB_NAME }}"
+            - name: DB_PASSWORD
+              value: {{ .Values.brewdog.DB_PASSWORD }}
+            - name: DB_PORT
+              value: "{{ .Values.brewdog.DB_PORT }}" 
+            - name: DB_SSL
+              value: "{{ .Values.brewdog.DB_SSL }}"        
+            - name: SERVICES 
+              value: {{ .Values.brewdog.SERVICES }}
+            - name: SERVICEDIR
+              value: {{ .Values.brewdog.SERVICEDIR }}
+            - name: TRANSPORTER
+              value: {{ .Values.brewdog.TRANSPORTER }}
+            - name: NAMESPACE
+              value: {{ .Values.brewdog.NAMESPACE }}
+            - name: LOGLEVEL
+              value: {{ .Values.brewdog.LOGLEVEL }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

@@ -1,0 +1,110 @@
+# Default values for api.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+name: 
+image:
+  repository: [REDACTED]/beera-backend
+  tag: latest
+  pullPolicy: Always
+  pullSecret: beera
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 3002
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/affinity: cookie
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://beeraclient.demo.[REDACTED].io"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+    kubernetes.io/ingress.allow-http: "false"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+spec:
+  rules:
+  - host: beeraapi.demo.[REDACTED].io
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: api
+            port:
+              number: 3002
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+    
+api:
+ "DB_HOST": postgres
+ "DB_USER": beeradb
+ "DB_NAME": postgres
+ "DB_PASSWORD": root
+ "DB_PORT": "5432"
+ "DB_SSL": "1"
+ "CLIENT_URL": beeraclient.demo.[REDACTED].io
+ "API_URL": beeraapi.demo.[REDACTED].io
+ "NAMESPACE": demo
+ "LOGLEVEL": info
+ "SERVICEDIR": services
+ "TRANSPORTER": redis://api-redis-master:6379
+ "SERVICES": api
+ "port": "3002"
+ "REDIS_PASSWORD": "api-redis"
+ "REDIS_HOST": "api-redis-master"
+ "REDIS_PORT": "6379"
+
+ redis:
+  fullnameOverride: "redis"
+  usePassword: true 
+  password: "api-redis" 

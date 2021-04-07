@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "api.fullname" . }}
+  labels:
+    {{- include "api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "api.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      serviceAccountName: {{ include "api.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:          
+            - name: DB_HOST 
+              value: {{ .Values.api.DB_HOST }}
+            - name: DB_USER
+              value: {{ .Values.api.DB_USER }}
+            - name: DB_NAME
+              value: "{{ .Values.api.DB_NAME }}"
+            - name: DB_PASSWORD
+              value: {{ .Values.api.DB_PASSWORD }}
+            - name: DB_PORT
+              value: "{{ .Values.api.DB_PORT }}"
+            - name: DB_SSL
+              value: "{{ .Values.api.DB_SSL }}"
+            - name: CLIENT_URL
+              value: {{ .Values.api.CLIENT_URL }} 
+            - name: LOGLEVEL
+              value: {{ .Values.api.LOGLEVEL }}  
+            - name: API_URL 
+              value:  {{ .Values.api.API_URL }}
+            - name: NAMESPACE
+              value: {{ .Values.api.NAMESPACE }}  
+            - name: SERVICEDIR 
+              value:  {{ .Values.api.SERVICEDIR }}
+            - name: TRANSPORTER 
+              value:  {{ .Values.api.TRANSPORTER }}
+            - name: SERVICES 
+              value:  {{ .Values.api.SERVICES }}
+            - name: port 
+              value:  "{{ .Values.api.port }}"
+            - name: REDIS_PASSWORD 
+              value:  {{ .Values.api.REDIS_PASSWORD }}
+            - name: REDIS_HOST
+              value:  {{ .Values.api.REDIS_HOST }}
+            - name: REDIS_PORT 
+              value:  "{{ .Values.api.REDIS_PORT }}"
+          ports:
+            - name: http
+              containerPort: 3002
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            httpGet:
+              path: /
+              port: 3002
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

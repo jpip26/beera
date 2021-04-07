@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "notification.fullname" . }}
+  labels:
+    {{- include "notification.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "notification.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "notification.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      serviceAccountName: {{ include "notification.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:   
+            - name: DB_HOST 
+              value: {{ .Values.notification.DB_HOST }}
+            - name: DB_USER
+              value: {{ .Values.notification.DB_USER }}
+            - name: DB_NAME
+              value: "{{ .Values.notification.DB_NAME }}"
+            - name: DB_PASSWORD
+              value: {{ .Values.notification.DB_PASSWORD }}
+            - name: DB_PORT
+              value: "{{ .Values.notification.DB_PORT }}"    
+            - name: DB_SSL
+              value: "{{ .Values.notification.DB_SSL }}"     
+            - name: SERVICES 
+              value: {{ .Values.notification.SERVICES }}
+            - name: SERVICEDIR
+              value: {{ .Values.notification.SERVICEDIR }}
+            - name: TRANSPORTER
+              value: {{ .Values.notification.TRANSPORTER }}
+            - name: NAMESPACE
+              value: {{ .Values.notification.NAMESPACE }}
+            - name: LOGLEVEL
+              value: {{ .Values.notification.LOGLEVEL }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

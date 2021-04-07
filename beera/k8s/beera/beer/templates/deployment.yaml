@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "beer.fullname" . }}
+  labels:
+    {{- include "beer.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "beer.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "beer.selectorLabels" . | nindent 8 }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }}
+      serviceAccountName: {{ include "beer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:  
+            - name: DB_HOST 
+              value: {{ .Values.beer.DB_HOST }}
+            - name: DB_USER
+              value: {{ .Values.beer.DB_USER }}
+            - name: DB_NAME
+              value: "{{ .Values.beer.DB_NAME }}"
+            - name: DB_PASSWORD
+              value: {{ .Values.beer.DB_PASSWORD }}
+            - name: DB_PORT
+              value: "{{ .Values.beer.DB_PORT }}"    
+            - name: DB_SSL
+              value: "{{ .Values.beer.DB_SSL }}"    
+            - name: SERVICES 
+              value: {{ .Values.beer.SERVICES }}
+            - name: SERVICEDIR
+              value: {{ .Values.beer.SERVICEDIR }}
+            - name: TRANSPORTER
+              value: {{ .Values.beer.TRANSPORTER }}
+            - name: NAMESPACE
+              value: {{ .Values.beer.NAMESPACE }}
+            - name: LOGLEVEL
+              value: {{ .Values.beer.LOGLEVEL }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
